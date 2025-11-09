@@ -1,0 +1,86 @@
+package project;
+
+import java.io.*;
+import java.util.*;
+
+// Represents each menu item ordered by the customer
+class MenuItem implements Serializable {
+    String itemName;
+    int quantity;
+    double itemPrice;
+
+    MenuItem(String itemName, int quantity, double itemPrice) {
+        this.itemName = itemName;
+        this.quantity = quantity;
+        this.itemPrice = itemPrice;
+    }
+}
+
+// Manages orders and billing operations
+class Restaurant implements Serializable {
+    List<MenuItem> orderList = new ArrayList<>();
+
+    void addMenuItem(MenuItem item) {
+        orderList.add(item);
+    }
+
+    void printBill() {
+        double totalAmount = 0;
+        System.out.println("======================================");
+        System.out.println("Item Name     Quantity      Price");
+        System.out.println("--------------------------------------");
+
+        for (MenuItem item : orderList) {
+            System.out.printf("%-15s%-12d%-10.2f%n", item.itemName, item.quantity, item.itemPrice);
+            totalAmount += item.itemPrice;
+        }
+
+        System.out.println("--------------------------------------");
+        System.out.println("Total Amount: ₹" + totalAmount);
+        System.out.println("======================================");
+    }
+}
+
+// Runnable class for saving restaurant data (backup)
+class BackupWriter implements Runnable {
+    Restaurant restaurant;
+
+    BackupWriter(Restaurant restaurant) {
+        this.restaurant = restaurant;
+    }
+
+    public void run() {
+        try {
+            FileOutputStream fileOut = new FileOutputStream("restaurant_backup.dat");
+            ObjectOutputStream objOut = new ObjectOutputStream(fileOut);
+            objOut.writeObject(restaurant);
+            objOut.close();
+            fileOut.close();
+            System.out.println("Backup file created successfully!");
+        } catch (Exception e) {
+            System.out.println("Error while creating backup: " + e.getMessage());
+        }
+    }
+}
+
+// Main class
+public class Hm {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        Restaurant rest = new Restaurant();
+
+        System.out.println("=== Welcome to Java Restaurant Billing System ===");
+
+        // Adding some sample orders
+        rest.addMenuItem(new MenuItem("Pasta", 2, 250));
+        rest.addMenuItem(new MenuItem("Sandwich", 1, 100));
+        rest.addMenuItem(new MenuItem("Cold Coffee", 2, 150));
+
+        // Printing the final bill
+        rest.printBill();
+
+        // Creating backup using a separate thread
+        Thread backupThread = new Thread(new BackupWriter(rest));
+        backupThread.start();
+    }
+}
